@@ -1,0 +1,67 @@
+name: Deploy Spring Boot Application
+
+on:
+  push:
+    branches:
+      - step2-3  # 또는 배포할 브랜치 이름
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        
+      - name: Set up JDK 21
+        uses: actions/setup-java@v3
+        with:
+          java-version: '21'
+
+      - name: Build Spring Boot application
+        run: ./gradlew build -x test  # Gradle을 사용하는 경우
+
+      - name: Upload JAR file to remote server
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.REMOTE_SSH_HOST }}
+          username: ${{ secrets.REMOTE_SSH_USERNAME }}
+          key: ${{ secrets.REMOTE_SSH_KEY }}
+          port: ${{ secrets.REMOTE_SSH_PORT }}
+          source: "./build/libs/spring-gift-0.0.1-SNAPSHOT.jar"
+          target: "/katecam/"
+
+      - name: Restart Spring Boot application on remote server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.REMOTE_SSH_HOST }}
+          username: ${{ secrets.REMOTE_SSH_USERNAME }}
+          key: ${{ secrets.REMOTE_SSH_KEY }}
+          passphrase: ${{ secrets.REMOTE_SSH_PASSPHRASE }}
+          port: ${{ secrets.REMOTE_SSH_PORT }}
+          script: |
+            #!/bin/bash
+            set -e
+
+            # 디렉토리 변경
+            cd /katecam
+
+            # 현재 실행 중인 서비스 중지
+            echo "Stopping Spring Boot service..."
+            sudo systemctl stop spring-gift.service || { echo "Failed to stop service"; exit 1; }
+
+            # 기존 JAR 파일 삭제
+            echo "Removing old JAR file..."
+            if [ -f "spring-gift-0.0.1-SNAPSHOT.jar" ]; then
+              rm -f spring-gift-0.0.1-SNAPSHOT.jar
+            else
+              echo "Old JAR file does not exist."
+            fi
+
+            # 새로운 JAR 파일 복사
+            echo "Copying new JAR file..."
+            cp /katecam/spring-gift-0.0.1-SNAPSHOT.jar /path/to/your/app.jar
+
+            # 새로운 JAR 파일 실행
+            echo "Starting Spring Boot service..."
+            sudo systemctl start spring-gift.service || { echo "Failed to start service"; exit 1; }
