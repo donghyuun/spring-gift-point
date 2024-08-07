@@ -19,6 +19,7 @@ public record OrderRequest(
     @NotNull
     @Min(value = 1, message = "차감할 수량의 값은 1 이상이어야 합니다.")
     Long quantity,
+    @NotNull
     Boolean hasCashReceipt,
     @NotNull
     ReceiptType cashReceiptType,

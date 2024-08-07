@@ -103,9 +103,6 @@ public class OptionService {
         Product product = productRepository.findById(option.getProduct().getId())
             .orElseThrow(() -> new ProductNotFoundException(option.getProduct().getId()));
 
-        if (quantity <= 0) {
-            throw new BusinessException(ErrorCode.BAD_REQUEST, "차감할 수량의 값은 1 이상이어야 합니다.");
-        }
         if (option.getQuantity() < quantity) {
             throw new BusinessException(ErrorCode.BAD_REQUEST, "차감할 수량이 옵션의 잔여 수량보다 많습니다.");
         }

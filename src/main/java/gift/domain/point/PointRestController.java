@@ -27,7 +27,7 @@ public class PointRestController {
         return ResponseEntity.ok(new PointRequestResponse(point));
     }
 
-    @PostMapping("/api/points")
+    @PostMapping("/api/points") // "/api/points/charge" 사용도 고려해보기
     @Operation(summary = "내 포인트 충전")
     public ResponseEntity chargePoint(
         @Login LoginInfo loginInfo, @Valid @RequestBody PointRequestResponse pointRequestResponse) {
